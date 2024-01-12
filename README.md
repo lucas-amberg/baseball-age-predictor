@@ -1,4 +1,5 @@
-# baseball-age-predictor
+# Baseball Age Predictor AI
+
 Takes input of certain stats and guesses the age of the player
 
 Created using Python, ScikitLearn, MatPlotLib, Pandas, NumPy, and PyTorch

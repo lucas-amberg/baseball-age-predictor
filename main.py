@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 # We will be using 9 Inputs, 4 Hidden Layers, and 1 Output
 class Model(NN.Module):
 
-  def __init__(self, in_features = 11, h1 = 15, h2 = 16, h3 = 12, h4 = 10, out_features = 46, dropout_rate=0.2):
+  def __init__(self, in_features = 10, h1 = 15, h2 = 16, h3 = 12, h4 = 10, out_features = 46, dropout_rate=0.2):
     super().__init__()
     self.fc1 = NN.Linear(in_features, h1)
     self.dropout = NN.Dropout(dropout_rate)
@@ -44,7 +44,7 @@ data_df = pd.read_csv(url)
 # (Prints whole data set)
 # print(data_df)
 
-X = data_df.drop([ 'Position', 'Year', 'Name', 'Age', 'At_Bats', 'Doubles', 'Triples', 'Caught_Stealing', 'Base_On_Balls', 'On_Base_Percentage', 'Slugging_Percentage', 'On_Base_Plus_Slugging_Percentage_Plus', 'Total_Bases', 'Double_Plays_Grounded_Into', 'Times_Hit_By_Pitch', 'Sacrifice_Hits', 'Sacrifice_Flies', 'Intentional_Bases_on_Balls', 'Dominant_Hand', 'Switch_Hitter' ], axis=1)
+X = data_df.drop([ 'Rank', 'Position', 'Year', 'Name', 'Age', 'Plate_Appearances', 'Doubles', 'Triples', 'Caught_Stealing', 'Base_On_Balls', 'On_Base_Percentage', 'Slugging_Percentage', 'On_Base_Plus_Slugging_Percentage_Plus', 'Total_Bases', 'Double_Plays_Grounded_Into', 'Times_Hit_By_Pitch', 'Sacrifice_Hits', 'Sacrifice_Flies', 'Intentional_Bases_on_Balls', 'Dominant_Hand', 'Switch_Hitter' ], axis=1)
 y = data_df['Age']
 
 # Prints input data
@@ -125,11 +125,37 @@ with torch.no_grad():
       within[3] += 1
 
 
+# Output results of test
 print(f'\nThe model predicted {correct} right out of {len(y_test)}.')
 print(f'\tand it predicted {within[0]} within 2 years out of {len(y_test)}.')
 print(f'\tand it predicted {within[1]} within 3 years out of {len(y_test)}.')
 print(f'\tand it predicted {within[2]} within 4 years out of {len(y_test)}.')
 print(f'\tand it predicted {within[3]} within 5 years out of {len(y_test)}.')
 
+torch.save(model.state_dict(), 'ai_mlb_age_predictor.pt') # Save model
 
+if input('\nWould you like to enter player data for yourself? [y/n]\n\t> ') == 'y':
+  while True:
+    print('\n')
 
+    games = float(input('Enter the amount of games the player played in the season you want to analyze: '))
+    pa = float(input('Enter the amount of at bats: '))
+    runs = float(input('Enter the amount of runs: '))
+    hits = float(input('Enter the amount of hits: '))
+    hr = float(input('Enter the amount of home runs: '))
+    rbi = float(input('Enter the amount of RBI: '))
+    sb = float(input('Enter the amount of stolen bases: '))
+    strikeouts = float(input('Enter the amount of strikeouts: '))
+    ba = float(input('Enter the batting average (eg: .394): ' ))
+    ops = float(input('Enter the players OPS (eg: 0.932): '))
+
+    player_data = torch.tensor([games, pa, runs, hits, hr, rbi, sb, strikeouts, ba, ops])
+
+    print('I predict this players age is...')
+
+    with torch.no_grad():
+      y_val = model.forward(player_data)
+      print(y_val.argmax().item())
+    
+    if input('\nWould you like to try another player? [y/n]\n\t> ') != 'y':
+      break
