@@ -74,8 +74,9 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train model
 
-epochs = 20000 # Going to start with a large number of Epochs to ensure data is well trained
+epochs = 7001 # Going to start with a large number of Epochs to ensure data is well trained
 losses = []
+print('\nTraining model, this may take a few minutes...')
 
 for i in range(epochs):
   y_pred = model.forward(X_train)
@@ -85,7 +86,7 @@ for i in range(epochs):
   losses.append(loss.detach().numpy())
 
   if i % 1000 == 0:
-    print(f'Epoch {i} had a loss of {loss}.')
+    print(f'\tEpoch {i}/{epochs-1} had a loss of {loss}.')
 
   optimizer.zero_grad()
   loss.backward()
@@ -94,7 +95,41 @@ for i in range(epochs):
 
 # Graph loss over time
 plt.plot(range(epochs), losses)
+plt.title('Loss over Training Period')
 plt.ylabel('loss/error')
 plt.xlabel('Epoch')
 plt.show()
+
+# Test model
+with torch.no_grad():
+  y_eval = model.forward(X_test)
+  loss = criterion(y_eval, y_test)
+  # print(loss) # Test loss
+
+correct = 0
+within = [0, 0, 0, 0] # Will store the number of correct within 2, 3, 4, and 5 years respectfully
+
+with torch.no_grad():
+  for i, data in enumerate(X_test):
+    y_val = model.forward(data)
+
+    if y_val.argmax().item() == y_test[i]:
+      correct += 1
+    if (y_val.argmax().item() > y_test[i] and y_val.argmax().item() < y_test[i] + 2) or (y_val.argmax().item() < y_test[i] and y_val.argmax().item() > y_test[i] - 2):
+      within[0] += 1
+    if (y_val.argmax().item() > y_test[i] and y_val.argmax().item() < y_test[i] + 3) or (y_val.argmax().item() < y_test[i] and y_val.argmax().item() > y_test[i] - 3):
+      within[1] += 1
+    if (y_val.argmax().item() > y_test[i] and y_val.argmax().item() < y_test[i] + 4) or (y_val.argmax().item() < y_test[i] and y_val.argmax().item() > y_test[i] - 4):
+      within[2] += 1
+    if (y_val.argmax().item() > y_test[i] and y_val.argmax().item() < y_test[i] + 5) or (y_val.argmax().item() < y_test[i] and y_val.argmax().item() > y_test[i] - 5):
+      within[3] += 1
+
+
+print(f'\nThe model predicted {correct} right out of {len(y_test)}.')
+print(f'\tand it predicted {within[0]} within 2 years out of {len(y_test)}.')
+print(f'\tand it predicted {within[1]} within 3 years out of {len(y_test)}.')
+print(f'\tand it predicted {within[2]} within 4 years out of {len(y_test)}.')
+print(f'\tand it predicted {within[3]} within 5 years out of {len(y_test)}.')
+
+
 
